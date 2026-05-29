@@ -1,0 +1,27 @@
+# Python compiled files
+__pycache__/
+*.pyc
+*.pyo
+
+# Blender files
+*.blend1
+*.blend2
+*.blend3
+
+# Editor settings
+.vscode/
+.idea/
+*.code-workspace
+
+# OS
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# Virtual environment
+venv/
+env/
+ENV/
+
+# Logs
+*.log
