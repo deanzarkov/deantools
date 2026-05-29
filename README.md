@@ -1,6 +1,7 @@
 # DeanTools for Blender
 
 DeanTools is a simple Blender add-on that serves as a hub for other DeanTools add-ons.
+Find out more about the add-ons at [text](https://www.deantools.dev/)
 
 ## Installation
 
