@@ -1,3 +1,8 @@
+# Archives
+*.zip
+*.rar
+*.7z
+
 # Python compiled files
 __pycache__/
 *.pyc

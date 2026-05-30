@@ -7,10 +7,10 @@ tagline = "Main hub for all DT add-ons"
 maintainer = "Dean Zarkov <deanzarkov@protonmail.com>"
 type = "add-on"
 
-tags = ["Geometry Nodes"]
+tags = ["User Interface"]
 
 blender_version_min = "5.0.0"
 
 license = [
-  "SPDX:MIT",
+  "SPDX:GPL-3.0-or-later",
 ]

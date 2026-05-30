@@ -1,0 +1,42 @@
+name: Publish to GitHub Pages
+
+on:
+  push:
+    tags:
+      - 'v*'
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Install Blender 5.1
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y wget xz-utils
+          wget https://download.blender.org/release/Blender5.1/blender-5.1.0-linux-x64.tar.xz
+          tar -xf blender-5.1.0-linux-x64.tar.xz
+          echo "$GITHUB_WORKSPACE/blender-5.1.0-linux-x64" >> $GITHUB_PATH
+
+      - name: Package add-on
+        run: |
+          zip -r addon.zip . -x "*.git*" ".github/*"
+
+      - name: Prepare repo folder
+        run: |
+          mkdir repo
+          cp addon.zip repo/
+
+      - name: Generate index.json
+        run: |
+          blender --background --command extension server-generate --repo-dir=repo
+
+      - name: Deploy to GitHub Pages
+        uses: peaceiris/actions-gh-pages@v4
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_dir: ./repo
