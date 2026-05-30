@@ -6,9 +6,11 @@ from .dt_tools_data import DT_TOOLS_DATA
 
 dt_preview_collections = {}
 
-available_tools = []
+# Get all available tool IDs (e.g. 'EFS', 'SHP', etc.)
+all_tools = []
 for tool_id in DT_TOOLS_DATA.keys():
-    available_tools.append(tool_id)
+    all_tools.append(tool_id)
+
 
 # CUSTOM PROPS
 class DT_Props(bpy.types.PropertyGroup):
@@ -29,39 +31,56 @@ class DT_Props(bpy.types.PropertyGroup):
 
 
 # FUNCTIONS
-def dt_check_addon(tool_id):
+def dt_get_addon_info(tool_id):
     """
-    Find if an add-on is installed and/or enabled across all repositories and returns a state flag.
+    Get information for a specific add-on by its module name.
+    
+    Args:
+        tool_id (str): The module name of the add-on
+    
     Returns:
-        'ENABLED', 'NOT_ENABLED' or 'NOT_INSTALLED'
+        dict: Dictionary containing add-on info
+            {
+                'name': 'Add-on Display Name',
+                'version': (1, 0, 0),
+                'state': 'ENABLED', 'NOT_ENABLED' or 'NOT_INSTALLED',
+            }
     """
-    if tool_id:
-        too_id_name = DT_TOOLS_DATA[tool_id]['id_name']
-        for mod in addon_utils.modules():
-            if mod.__name__.endswith(too_id_name):
-                if mod.__name__ in bpy.context.preferences.addons:
-                    return 'ENABLED'
-                else:
-                    return 'NOT_ENABLED'
-    return 'NOT_INSTALLED'
+    tool_id_name = DT_TOOLS_DATA[tool_id]['id_name']
+    
+    # Search for tool add-on
+    for mod in addon_utils.modules():
+        if mod.__name__.endswith(tool_id_name):
+            return {
+                'name': mod.bl_info.get('name', ''),
+                'version': mod.bl_info.get('version', (-1, -1, -1)),
+                'state': 'ENABLED' if mod.__name__ in bpy.context.preferences.addons else 'NOT_ENABLED'
+            }
+    
+    # No tool found - default state
+    return {
+        'name': '',
+        'version': (-1, -1, -1),
+        'state': 'NOT_INSTALLED'
+    }
 
 def dt_get_enabled_tools():
     enabled_tools = []
-    for tool_id in available_tools:
-        too_id_name = DT_TOOLS_DATA[tool_id]['id_name']
+    for tool_id in all_tools:
+        tool_id_name = DT_TOOLS_DATA[tool_id]['id_name']
         for mod in addon_utils.modules():
-            if mod.__name__.endswith(too_id_name) and mod.__name__ in bpy.context.preferences.addons:
+            if mod.__name__.endswith(tool_id_name) and mod.__name__ in bpy.context.preferences.addons:
                 enabled_tools.append(tool_id)
     return enabled_tools
 
 def dt_refresh_tools():
-    for tool_id in available_tools:
-        too_id_name = DT_TOOLS_DATA[tool_id]['id_name']
+    for tool_id in all_tools:
+        tool_id_name = DT_TOOLS_DATA[tool_id]['id_name']
         for mod in addon_utils.modules():
-            if mod.__name__.endswith(too_id_name) and mod.__name__ in bpy.context.preferences.addons:
+            if mod.__name__.endswith(tool_id_name) and mod.__name__ in bpy.context.preferences.addons:
                 tool_module = mod.__name__
-                bpy.ops.preferences.addon_disable(module=tool_module)
-                bpy.ops.preferences.addon_enable(module=tool_module)
+                addon_utils.disable(module_name=tool_module)
+                addon_utils.enable(module_name=tool_module)
 
 def dt_enable_tool(tool_id):
     """Enable a tool's add-on if it is installed but not enabled"""
@@ -69,7 +88,7 @@ def dt_enable_tool(tool_id):
     for mod in addon_utils.modules():
         if mod.__name__.endswith(tool_id_name) and mod.__name__ not in bpy.context.preferences.addons:
             tool_module = mod.__name__
-            bpy.ops.preferences.addon_enable(module=tool_module)
+            addon_utils.enable(module_name=tool_module, default_set=True)
 
 def dt_disable_tool(tool_id):
     """Disable a tool's add-on if it is installed"""
@@ -77,7 +96,7 @@ def dt_disable_tool(tool_id):
     for mod in addon_utils.modules():
         if mod.__name__.endswith(tool_id_name) and mod.__name__ in bpy.context.preferences.addons:
             tool_module = mod.__name__
-            bpy.ops.preferences.addon_disable(module=tool_module)
+            addon_utils.disable(module_name=tool_module, default_set=True)
 
 def dt_draw_missing_tool(space, tool_id, missing_type='NOT_INSTALLED'):
     dt_pcoll = dt_preview_collections["main"]
@@ -93,10 +112,11 @@ def dt_draw_missing_tool(space, tool_id, missing_type='NOT_INSTALLED'):
         sub.label(text='Find out more on:')
         
         sub = box.column(align=False)
-        if tool_data['on_gr']:
+        if tool_data['gr_url']:
             sub.operator("wm.url_open", text="Gumroad", icon_value=dt_pcoll["dt_gr_icon"].icon_id).url = tool_data['gr_url']
-        if tool_data['on_sh']:
+        if tool_data['sh_url']:
             sub.operator("wm.url_open", text="Superhive (Blender Market)", icon_value=dt_pcoll["dt_sh_icon"].icon_id).url = tool_data['sh_url']
+    
     elif missing_type == 'NOT_ENABLED':
         sub = box.column(align=True)
         sub.enabled = False
@@ -171,19 +191,18 @@ class DT_PT_GeoToolsPanel(bpy.types.Panel):
         row.prop(dt_props, "context_tool", text="")
         row.separator(factor=0.5)
         sub = row.row()
-        # sub.ui_units_x = 4
         sub.alignment = 'LEFT'
         sub.menu("DT_MT_options_menu")
         
         # EYE FEATURES SET
         if dt_props.context_tool == 'EFS':
-            tool_state = dt_check_addon('EFS')
+            tool_state = dt_get_addon_info('EFS')['state']
             if tool_state != 'ENABLED':
                 dt_draw_missing_tool(layout, 'EFS', missing_type=tool_state)
         
         # STYLIZED HAIR PRO
         if dt_props.context_tool == 'SHP':
-            tool_state = dt_check_addon('SHP')
+            tool_state = dt_get_addon_info('SHP')['state']
             if tool_state != 'ENABLED':
                 dt_draw_missing_tool(layout, 'SHP', missing_type=tool_state)
         
