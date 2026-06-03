@@ -2,6 +2,7 @@ import bpy
 import os
 import bpy.utils.previews
 import addon_utils
+from textwrap import wrap
 from .dt_tools_data import DT_TOOLS_DATA
 
 dt_preview_collections = {}
@@ -17,8 +18,8 @@ class DT_Props(bpy.types.PropertyGroup):
     context_tool: bpy.props.EnumProperty(
         name="Context Tool",
         description="Select which tool's UI is displayed",
-        items=[('EFS', "Eye Features Set", ""),
-               ('SHP', "Stylized Hair PRO", ""),
+        items=[('EFS', "Eye Features Set", DT_TOOLS_DATA['EFS']['description']),
+               ('SHP', "Stylized Hair PRO", DT_TOOLS_DATA['SHP']['description']),
                ],
         default='EFS'
     ) # type: ignore
@@ -31,6 +32,33 @@ class DT_Props(bpy.types.PropertyGroup):
 
 
 # FUNCTIONS
+def dt_split_string(text, max_length=40, first_line_subtract=0):
+    first_line = wrap(text, width=max(max_length - first_line_subtract, 1))[0]
+
+    remaining_text = text[len(first_line):].lstrip()
+    remaining_lines = wrap(remaining_text, width=40)
+
+    return [first_line] + remaining_lines
+
+def dt_draw_multiline_text(text, space, max_chars=40, first_line_subtract=0, enabled=False, icon=None):
+    text_col = space.column(align=True)
+    text_col.enabled = enabled
+
+    text_list = dt_split_string(text, max_chars, first_line_subtract)
+    
+    for label_index, label in enumerate(text_list):
+        if label_index == 0:
+            text_col.label(text=label, icon=icon if icon else 'NONE')
+        else:
+            text_col.label(text=label)
+
+def dt_get_icon(icon_prefix):
+    dt_pcoll = dt_preview_collections["main"]
+    theme_bg = bpy.context.preferences.themes[0].user_interface.wcol_regular.inner
+    bg_luminance = (0.299 * theme_bg[0] + 0.587 * theme_bg[1] + 0.114 * theme_bg[2])
+    dt_icon_id = f"{icon_prefix}_dark" if bg_luminance > 0.5 else f"{icon_prefix}_light"
+    return dt_pcoll[dt_icon_id].icon_id
+
 def dt_get_addon_info(tool_id):
     """
     Get information for a specific add-on by its module name.
@@ -99,23 +127,29 @@ def dt_disable_tool(tool_id):
             addon_utils.disable(module_name=tool_module, default_set=True)
 
 def dt_draw_missing_tool(space, tool_id, missing_type='NOT_INSTALLED'):
-    dt_pcoll = dt_preview_collections["main"]
+    # dt_pcoll = dt_preview_collections["main"]
     tool_data = DT_TOOLS_DATA[tool_id]
     box = space.box()
     if missing_type == 'NOT_INSTALLED':
-        sub = box.column(align=True)
-        sub.enabled = False
-        sub.scale_y = 0.8
-        sub.label(text=f'"{tool_data['name']}" not installed.')
-        if tool_data['description']:
-            sub.label(tool_data['description'])
-        sub.label(text='Find out more on:')
+        box.label(text=f'{tool_data['name']} ({tool_id}) not installed.')
         
+        # Description
+        if tool_data['description']:
+            sub = box.column(align=True)
+            sub.scale_y = 0.8
+            dt_draw_multiline_text(tool_data['description'], sub, max_chars=40)
+        
+        # Links
         sub = box.column(align=False)
+        sub.label(text='Find out more on:')
         if tool_data['gr_url']:
-            sub.operator("wm.url_open", text="Gumroad", icon_value=dt_pcoll["dt_gr_icon"].icon_id).url = tool_data['gr_url']
+            sub.operator("wm.url_open", text="Gumroad", icon_value=dt_get_icon("dt_gr")).url = tool_data['gr_url']
         if tool_data['sh_url']:
-            sub.operator("wm.url_open", text="Superhive (Blender Market)", icon_value=dt_pcoll["dt_sh_icon"].icon_id).url = tool_data['sh_url']
+            sub.operator("wm.url_open", text="Superhive (Blender Market)", icon_value=dt_get_icon("dt_sh")).url = tool_data['sh_url']
+    
+        row = sub.row()
+        row.operator("wm.url_open", text="Overview", icon='URL').url = tool_data['overview_url']
+        row.operator("wm.url_open", text="Docs", icon='DOCUMENTS').url = tool_data['docs_url']
     
     elif missing_type == 'NOT_ENABLED':
         sub = box.column(align=True)
@@ -165,9 +199,16 @@ class DT_MT_DeanToolsOptionsMenu(bpy.types.Menu):
 
     def draw(self, context):
         dt_props = context.scene.dt_addon
+        ctx_tool_id = dt_props.context_tool
+        tool_data = DT_TOOLS_DATA[ctx_tool_id]
         layout = self.layout
-        layout.prop(dt_props, "auto_tool")
         layout.operator("scene.dt_refresh_tools", icon='FILE_REFRESH')
+        layout.separator(type='LINE')
+        sub = layout.row()
+        sub.enabled = False
+        sub.label(text=f"{tool_data['name']}")
+        layout.operator("wm.url_open", text="Overview", icon='URL').url = tool_data['overview_url']
+        layout.operator("wm.url_open", text="Docs", icon='DOCUMENTS').url = tool_data['docs_url']
 
 # MAIN PANEL
 class DT_PT_GeoToolsPanel(bpy.types.Panel):
