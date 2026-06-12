@@ -12,16 +12,27 @@ all_tools = []
 for tool_id in DT_TOOLS_DATA.keys():
     all_tools.append(tool_id)
 
+def dt_get_icon(icon_prefix):
+    dt_pcoll = dt_preview_collections["main"]
+    theme_bg = bpy.context.preferences.themes[0].user_interface.wcol_regular.inner
+    bg_luminance = (0.299 * theme_bg[0] + 0.587 * theme_bg[1] + 0.114 * theme_bg[2])
+    dt_icon_id = f"{icon_prefix}_dark" if bg_luminance > 0.5 else f"{icon_prefix}_light"
+    return dt_pcoll[dt_icon_id].icon_id
 
 # CUSTOM PROPS
+
+def dt_get_tools_list(self, context):
+    return [
+        ('EFS', "Eye Features Set", DT_TOOLS_DATA['EFS']['description'], dt_get_icon("dt_efs") , 0),
+        ('SHP', "Stylized Hair PRO", DT_TOOLS_DATA['SHP']['description'], dt_get_icon("dt_shp"), 1),
+    ]
+
 class DT_Props(bpy.types.PropertyGroup):
     context_tool: bpy.props.EnumProperty(
         name="Context Tool",
         description="Select which tool's UI is displayed",
-        items=[('EFS', "Eye Features Set", DT_TOOLS_DATA['EFS']['description']),
-               ('SHP', "Stylized Hair PRO", DT_TOOLS_DATA['SHP']['description']),
-               ],
-        default='EFS'
+        items=dt_get_tools_list,
+        default=0
     ) # type: ignore
     
     auto_tool: bpy.props.BoolProperty(
@@ -51,13 +62,6 @@ def dt_draw_multiline_text(text, space, max_chars=40, first_line_subtract=0, ena
             text_col.label(text=label, icon=icon if icon else 'NONE')
         else:
             text_col.label(text=label)
-
-def dt_get_icon(icon_prefix):
-    dt_pcoll = dt_preview_collections["main"]
-    theme_bg = bpy.context.preferences.themes[0].user_interface.wcol_regular.inner
-    bg_luminance = (0.299 * theme_bg[0] + 0.587 * theme_bg[1] + 0.114 * theme_bg[2])
-    dt_icon_id = f"{icon_prefix}_dark" if bg_luminance > 0.5 else f"{icon_prefix}_light"
-    return dt_pcoll[dt_icon_id].icon_id
 
 def dt_get_addon_info(tool_id):
     """
@@ -225,10 +229,10 @@ class DT_PT_GeoToolsPanel(bpy.types.Panel):
         
         # TOOL SELECTOR
         row = layout.row(align=True)
-        sub = row.row()
-        sub.alignment = 'LEFT'
-        sub.ui_units_x = 1.5
-        sub.label(text="Tool")
+        # sub = row.row()
+        # sub.alignment = 'LEFT'
+        # sub.ui_units_x = 1.5
+        # sub.label(text="Tool")
         row.prop(dt_props, "context_tool", text="")
         row.separator(factor=0.5)
         sub = row.row()

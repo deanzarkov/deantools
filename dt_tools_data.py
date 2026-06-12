@@ -11,7 +11,7 @@ DT_TOOLS_DATA = {
     },
     
     'SHP': {
-        'id_name'       : 'dt_stylized_hair_pro',
+        'id_name'       : 'stylized_hair_pro',
         'name'          : "Stylized Hair Pro",
         'description'   : "A powerful feature-rich tool for creating hair strands geometry from curves. Fully procedural, allowing you to create complex hair geometry with ease.",
         'latest_version': (4, 1, 7),
