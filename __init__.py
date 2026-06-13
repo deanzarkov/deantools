@@ -205,12 +205,17 @@ class DT_MT_DeanToolsOptionsMenu(bpy.types.Menu):
         dt_props = context.scene.dt_addon
         ctx_tool_id = dt_props.context_tool
         tool_data = DT_TOOLS_DATA[ctx_tool_id]
+        tool_info = dt_get_addon_info(ctx_tool_id)
+        
         layout = self.layout
         layout.operator("scene.dt_refresh_tools", icon='FILE_REFRESH')
         layout.separator(type='LINE')
         sub = layout.row()
         sub.enabled = False
-        sub.label(text=f"{tool_data['name']}")
+        tool_version = tool_info['version']
+        tool_version_str = f"v{tool_version[0]}.{tool_version[1]}.{tool_version[2]}"
+        tool_state = "- not installed" if tool_info['state'] == 'NOT_INSTALLED' else tool_version_str
+        sub.label(text=f"{tool_data['name']} {tool_state}")
         layout.operator("wm.url_open", text="Overview", icon='URL').url = tool_data['overview_url']
         layout.operator("wm.url_open", text="Docs", icon='DOCUMENTS').url = tool_data['docs_url']
 
@@ -229,10 +234,6 @@ class DT_PT_GeoToolsPanel(bpy.types.Panel):
         
         # TOOL SELECTOR
         row = layout.row(align=True)
-        # sub = row.row()
-        # sub.alignment = 'LEFT'
-        # sub.ui_units_x = 1.5
-        # sub.label(text="Tool")
         row.prop(dt_props, "context_tool", text="")
         row.separator(factor=0.5)
         sub = row.row()
