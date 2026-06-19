@@ -14,7 +14,17 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
 
-      - name: Install Blender 5.1
+      - name: Get version from tag
+        id: version
+        run: |
+          # Remove 'v' prefix from tag (v1.0.0 → 1.0.0)
+          VERSION=${GITHUB_REF#refs/tags/v}
+          # Replace dots with underscores (1.0.0 → 1_0_0)
+          VERSION_UNDERSCORE=${VERSION//./_}
+          echo "VERSION=$VERSION" >> $GITHUB_OUTPUT
+          echo "VERSION_UNDERSCORE=$VERSION_UNDERSCORE" >> $GITHUB_OUTPUT
+
+      - name: Install Blender 5.1.2
         run: |
           sudo apt-get update
           sudo apt-get install -y wget xz-utils
@@ -24,12 +34,24 @@ jobs:
 
       - name: Package add-on
         run: |
-          zip -r addon.zip . -x "*.git*" ".github/*"
+          # Create versioned ZIP filename: deantools_v1_0_0.zip
+          ZIP_NAME="deantools_v${{ steps.version.outputs.VERSION_UNDERSCORE }}.zip"
+          echo "Creating $ZIP_NAME"
+          
+          zip -r "$ZIP_NAME" . \
+            -x "*.git*" \
+            ".github/*" \
+            "blender-5.1.2-linux-x64/*" \
+            "blender-5.1.2-linux-x64" \
+            "*.tar.xz" \
+            "*.zip" \
+            "repo/*"
 
       - name: Prepare repo folder
         run: |
           mkdir repo
-          cp addon.zip repo/
+          # Copy the versioned ZIP to repo folder
+          cp deantools_v${{ steps.version.outputs.VERSION_UNDERSCORE }}.zip repo/
 
       - name: Generate index.json
         run: |
@@ -40,3 +62,5 @@ jobs:
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
           publish_dir: ./repo
+          publish_branch: gh-pages
+          force_orphan: true
