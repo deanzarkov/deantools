@@ -1,0 +1,25 @@
+{
+  "version": "v1",
+  "blocklist": [],
+  "data": [
+    {
+      "schema_version": "1.0.0",
+      "id": "dt_deantools_main",
+      "name": "DeanTools",
+      "tagline": "Main hub for all DT add-ons",
+      "version": "1.0.0",
+      "type": "add-on",
+      "maintainer": "Dean Zarkov <dean@deantools.dev>",
+      "license": [
+        "SPDX:GPL-3.0-or-later"
+      ],
+      "blender_version_min": "5.0.0",
+      "tags": [
+        "User Interface"
+      ],
+      "archive_url": "./deantools_v1_0_0.zip",
+      "archive_size": 66474,
+      "archive_hash": "sha256:821a2d52c79642b8150672d821187fd4ac3b4e7b496f7f44e1b6d3bbb7b50249"
+    }
+  ]
+}
