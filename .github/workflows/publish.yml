@@ -18,9 +18,9 @@ jobs:
         run: |
           sudo apt-get update
           sudo apt-get install -y wget xz-utils
-          wget https://download.blender.org/release/Blender5.1/blender-5.1.0-linux-x64.tar.xz
-          tar -xf blender-5.1.0-linux-x64.tar.xz
-          echo "$GITHUB_WORKSPACE/blender-5.1.0-linux-x64" >> $GITHUB_PATH
+          wget https://download.blender.org/release/Blender5.1/blender-5.1.2-linux-x64.tar.xz
+          tar -xf blender-5.1.2-linux-x64.tar.xz
+          echo "$GITHUB_WORKSPACE/blender-5.1.2-linux-x64" >> $GITHUB_PATH
 
       - name: Package add-on
         run: |
