@@ -23,9 +23,8 @@ Find out more about the add-ons at [https://www.deantools.dev/](https://www.dean
 ## Usage
 
 DeanTools gathers any compatible add-ons and displays them in a single UI.
-To switch between them, there is a dropdown field on top, to select the available add-on to show.
-When "Auto-Select" is turned on, the relevant add-on will be selected automatically, based on
-the context (selected object, workspace type, etc.)
+To switch between them, use the "Tool" drop-down field on top, to select the available add-on to show.
+You can get more info about the specific tool from the "Options" menu, next to the "Tool" drop-down
 
 ## Compatibility
 
