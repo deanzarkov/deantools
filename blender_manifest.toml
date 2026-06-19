@@ -4,7 +4,7 @@ id = "dt_deantools_main"
 version = "1.0.0"
 name = "DeanTools"
 tagline = "Main hub for all DT add-ons"
-maintainer = "Dean Zarkov <deanzarkov@protonmail.com>"
+maintainer = "Dean Zarkov <dean@deantools.dev>"
 type = "add-on"
 
 tags = ["User Interface"]

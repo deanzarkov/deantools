@@ -1,4 +1,5 @@
 import bpy
+import sys
 import os
 import bpy.utils.previews
 import addon_utils
@@ -20,7 +21,6 @@ def dt_get_icon(icon_prefix):
     return dt_pcoll[dt_icon_id].icon_id
 
 # CUSTOM PROPS
-
 def dt_get_tools_list(self, context):
     return [
         ('EFS', "Eye Features Set", DT_TOOLS_DATA['EFS']['description'], dt_get_icon("dt_efs") , 0),
@@ -111,7 +111,8 @@ def dt_refresh_tools():
         for mod in addon_utils.modules():
             if mod.__name__.endswith(tool_id_name) and mod.__name__ in bpy.context.preferences.addons:
                 tool_module = mod.__name__
-                addon_utils.disable(module_name=tool_module)
+                if tool_module in sys.modules:
+                    addon_utils.disable(module_name=tool_module)
                 addon_utils.enable(module_name=tool_module)
 
 def dt_enable_tool(tool_id):
@@ -126,9 +127,9 @@ def dt_disable_tool(tool_id):
     """Disable a tool's add-on if it is installed"""
     tool_id_name = DT_TOOLS_DATA[tool_id]['id_name']
     for mod in addon_utils.modules():
-        if mod.__name__.endswith(tool_id_name) and mod.__name__ in bpy.context.preferences.addons:
-            tool_module = mod.__name__
-            addon_utils.disable(module_name=tool_module, default_set=True)
+        if mod.__name__.endswith(tool_id_name):
+            if mod.__name__ in sys.modules:
+                addon_utils.disable(mod.__name__, default_set=True)              
 
 def dt_draw_missing_tool(space, tool_id, missing_type='NOT_INSTALLED'):
     # dt_pcoll = dt_preview_collections["main"]
@@ -154,6 +155,9 @@ def dt_draw_missing_tool(space, tool_id, missing_type='NOT_INSTALLED'):
         row = sub.row()
         row.operator("wm.url_open", text="Overview", icon='URL').url = tool_data['overview_url']
         row.operator("wm.url_open", text="Docs", icon='DOCUMENTS').url = tool_data['docs_url']
+        
+        sub.label(text='Already have it?')
+        sub.operator("extensions.package_install_files", text="Install from Disk...", icon='IMPORT')
     
     elif missing_type == 'NOT_ENABLED':
         sub = box.column(align=True)
